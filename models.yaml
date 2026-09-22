@@ -1,0 +1,32 @@
+# Model configuration for the demonstrator.
+#
+# The agent runs through a local Ollama server. Pull the model once
+# (`ollama pull qwen3.6:27b`), start Ollama, then run `python demo/server.py`.
+# To use another machine, change base_url; to use another model, change id.
+
+provider: local
+
+providers:
+  local:
+    kind: ollama
+    base_url: http://127.0.0.1:11434
+    timeout_s: 240
+    num_ctx: 8192        # Ollama's 4096 default truncates the conversation
+
+defaults:
+  temperature: 0.0
+  max_retries: 4
+  timeout_s: 600
+
+roles:
+  agent_backend_1:       # the model the demonstrator uses (BACKEND in server.py)
+    think: false
+    id: qwen3.6:27b
+
+capabilities:
+  local:
+    json_mode: true
+    constrained_decoding: true
+    seed: true
+    logprobs: false
+    prefix_caching: true

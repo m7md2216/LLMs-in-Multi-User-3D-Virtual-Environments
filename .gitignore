@@ -1,0 +1,4 @@
+data/llm_cache.sqlite*
+__pycache__/
+*.pyc
+.DS_Store
