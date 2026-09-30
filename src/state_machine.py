@@ -1,10 +1,10 @@
-"""Step 2 — the state machine. THIS IS THE SCHEMA FREEZE POINT.
+"""The state machine. THIS IS THE SCHEMA FREEZE POINT.
 
 Three later stages consume what is defined here and must not diverge from it:
-  * Step 3 authors transcripts against `Turn` and must satisfy `validate_session`
-  * Step 7 scores from the same fields (`referent` and `attribute_targeted` decide
+  * transcript generation authors against `Turn` and must satisfy `validate_session`
+  * scoring reads the same fields (`referent` and `attribute_targeted` decide
     over-disclosure eligibility; `gaze_congruent` decides the conflict split)
-  * Step 11's three.js demonstrator must emit `Observation` unchanged — that identity
+  * the three.js demonstrator must emit `Observation` unchanged — that identity
     is the paper's claim that the evaluated observations are the native output of a
     shared virtual environment rather than hand-authored text
 
@@ -99,7 +99,7 @@ class Turn:
     def over_disclosure_eligible(self) -> bool:
         """Can this turn expose a latent attribute of the non-speaking user?
 
-        Section 9 scopes over-disclosure to cross-reference AND joint turns that
+        Over-disclosure is scoped to cross-reference AND joint turns that
         target a latent attribute. Joint turns therefore may carry `referent` and
         `attribute_targeted` even though only cross-reference turns require them.
         Eligibility is read from the field, never inferred from the response.
@@ -148,7 +148,7 @@ class Session:
         return math.dist((ax, ay, az), (x, y, z))
 
     def observation(self, turn: Turn) -> dict:
-        """The canonical observation. Step 11 must emit exactly this shape."""
+        """The canonical observation. The demonstrator must emit exactly this shape."""
         return {
             "pair_id": self.pair_id,
             "scenario": self.scenario,
@@ -284,7 +284,7 @@ def make_positions(pair_index: int, seed: int = 20260917
 # ----------------------------------------------------------------- validation
 
 def validate_session(s: Session, pair_index: int) -> list[str]:
-    """Contract Step 3 must satisfy. Returns a list of violations."""
+    """Contract transcript generation must satisfy. Returns a list of violations."""
     errs: list[str] = []
     T = s.turns
 

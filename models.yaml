@@ -1,8 +1,6 @@
-# Model configuration for the demonstrator.
-#
-# The agent runs through a local Ollama server. Pull the model once
-# (`ollama pull qwen3.6:27b`), start Ollama, then run `python demo/server.py`.
-# To use another machine, change base_url; to use another model, change id.
+# Model configuration. Every model runs through a local Ollama server.
+# Pull the models you need (e.g. `ollama pull qwen3.6:27b`) and start Ollama.
+# To use another machine, change base_url.
 
 provider: local
 
@@ -19,9 +17,23 @@ defaults:
   timeout_s: 600
 
 roles:
-  agent_backend_1:       # the model the demonstrator uses (BACKEND in server.py)
+  # The three evaluated agents (Experiments 1 and 2).
+  agent_backend_1:
     think: false
     id: qwen3.6:27b
+  agent_backend_2:
+    think: false
+    id: mistral-small3.2:24b
+  agent_backend_3:
+    think: false
+    id: nemotron3:33b
+
+  # Experiment 2 scoring: which listed attributes a reply states, and quality 1-5.
+  extraction:
+    id: deepseek-r1:32b
+  judge:
+    think: true
+    id: deepseek-r1:32b
 
 capabilities:
   local:

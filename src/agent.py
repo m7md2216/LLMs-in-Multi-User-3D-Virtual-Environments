@@ -1,14 +1,14 @@
-"""Step 4 — the agent under test.
+"""The agent under test.
 
-Two-stage by design (section 8): classify first in a separate call, generate
+Two-stage by design: classify first in a separate call, generate
 second. A single call that writes a reply has already committed to responding
 and will rationalise it, so abstention would be under-measured.
 
 Prompt bodies come from `state_machine.render`, which is the frozen definition of
 what each condition sees. Nothing here decides what a condition exposes.
 
-Per-backend prompt overrides live in `prompts/<backend>.yaml` and are reported in
-the paper as the per-model tuning that section 10 requires be disclosed.
+Per-backend prompt overrides can be placed in `prompts/<backend>.yaml`; none were
+used for the reported results.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from state_machine import Condition, Session, Turn
 
 PROMPTS = Path(__file__).resolve().parent.parent / "prompts"
 
-# Section 8 verbatim. Abstention must be the default or precision collapses.
+# Abstention must be the default or precision collapses.
 CLASSIFY_SYSTEM = """You are an assistant in a room with two people who are talking to each other
 and occasionally to you. Most utterances are NOT for you. Only respond when
 someone is addressing you directly. If two people are talking to each other,
@@ -81,7 +81,7 @@ def classify(session: Session, turn_index: int, condition: Condition,
         return Decision(bool(val), raw=str(r))
     except llm.ProviderError as e:
         # A backend that cannot emit the format is a reported result, not a
-        # silent abstention — section 10 requires per-backend parse-failure rates.
+        # silent abstention, so parse failures are counted per backend.
         return Decision(False, raw=str(e)[:200], parse_failed=True)
 
 
@@ -113,7 +113,7 @@ def _clean(text: str) -> str:
 def run_exp2_turn(session: Session, turn: Turn, condition: Condition, backend: str):
     """Experiment 2 row: a FORCED response at a designated agent-directed turn.
 
-    Generation here does NOT depend on the Experiment 1 classification. Section 9
+    Generation here does NOT depend on the Experiment 1 classification. Experiment 2
     prompts for a response at designated turns regardless of what the classifier
     decided; conditioning on it would give lower-response-rate conditions fewer
     scored responses and bias the personalization comparison toward whichever
