@@ -5,21 +5,20 @@ decide whether it was addressed to it, using only what was said and where each
 speaker is facing. Nobody tells it the addressee. When one person asks about the
 other, the agent must also decide what it may say about someone who is present.
 
-This repository contains the browser-based 3D demonstrator, the experiment and
-scoring code, and the human annotations. **The complete LookAway corpus (the 40
-session transcripts, the persona profiles, and the corpus-construction pipeline)
-and the model outputs behind every table will be released upon acceptance.**
+This repository contains the browser-based 3D demonstrator and the experiment
+and scoring code. **The complete LookAway corpus (the 40 session transcripts, the
+persona profiles, and the corpus-construction pipeline) and the model outputs
+behind every table will be released upon acceptance.**
 
 ## Reproduce the paper's numbers
 
     pip install -r requirements.txt
     python src/reproduce_paper.py
 
-No model or GPU is needed. The script reads `output/` and `annotation/` and prints
-Tables I-IV, every statistical test, the privacy-instruction results, and the
-human validation, in the order they appear in the paper. Until the model outputs
-are released it reproduces the human validation (Section VI) and names the
-sections that are waiting for `output/`.
+No model or GPU is needed. The script reads `output/` and prints Tables I-IV,
+the statistical tests of both experiments, and the privacy-instruction results,
+in the order they appear in the paper. It runs once the model outputs are
+released.
 
 ## Run the demonstrator
 
@@ -47,7 +46,6 @@ single-user mode, and asset credits.
 |---|---|
 | `src/reproduce_paper.py` | recomputes every reported number from the files below |
 | `output/` | every model decision, reply, and score behind the paper (released upon acceptance) |
-| `annotation/` | answer key and the four annotators' responses (A1-A4) |
 | `src/agent.py`, `src/state_machine.py` | the agent's addressee decision and what each condition's prompt contains |
 | `src/run_experiment.py`, `src/score.py` | Experiments 1 and 2, and attribute extraction / quality rating |
 | `src/ablate_gaze_prompt.py`, `src/ablate_privacy_prompt.py` | the orientation-warning and privacy-instruction analyses |
@@ -82,7 +80,3 @@ and Ollama with the models in `models.yaml`; `reproduce_paper.py` does not.
 | `n_contam_revealed`, `n_contam_latent` | identity mix-up |
 | `judge_score` | response quality (1-5) |
 | arm `baseline` in the ablation files | the unmodified prompt |
-
-In `annotation/answer_key.csv`, items starting with B are the text-only traps (35),
-A the traps with the spatial line (25), C profile use (30), D authored contrasts
-(10), and E extraction (25).

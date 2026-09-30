@@ -11,7 +11,6 @@ SRC = Path(__file__).resolve().parent
 ROOT = SRC.parent
 DATA = ROOT / "data"
 OUTPUT = ROOT / "output"
-ANNOTATION = ROOT / "annotation"
 
 for _d in (DATA, OUTPUT):
     _d.mkdir(parents=True, exist_ok=True)

@@ -1,26 +1,24 @@
-"""Recompute every table and statistic in the paper from the released files.
+"""Recompute the paper's tables and experiment statistics from the model outputs.
 
-Reads only `output/*.csv` and `annotation/*.csv`; no model is called and the
-corpus itself is not needed.
+Reads only `output/*.csv`; no model is called and the corpus itself is not
+needed.
 
     python src/reproduce_paper.py
 
-p-values are exact McNemar (paired binary outcomes), Mann-Whitney U (unpaired
-quality scores), exact binomial against 50% chance, and Kruskal-Wallis, each
-printed exactly and as the threshold the paper reports.
+p-values are exact McNemar (paired binary outcomes) and Mann-Whitney U (unpaired
+quality scores), each printed exactly and as the threshold the paper reports.
 """
 from __future__ import annotations
 
 import csv
-import itertools
-from collections import Counter, defaultdict
+from collections import defaultdict
 from statistics import mean, stdev
 
-from scipy.stats import binomtest, kruskal, mannwhitneyu, spearmanr
+from scipy.stats import binomtest, mannwhitneyu
 
 import paths
 
-OUT, ANN = paths.OUTPUT, paths.ANNOTATION
+OUT = paths.OUTPUT
 MODELS = {"agent_backend_1": "qwen3.6", "agent_backend_2": "mistral-small3.2",
           "agent_backend_3": "nemotron3"}
 CONDS = ["P0", "P1a", "P1b", "P2a", "P2b"]
@@ -291,63 +289,6 @@ def privacy_section():
                       f"  (n={n})  p={p:.1e} ({thr(p)})")
 
 
-# ------------------------------------------------------------------ Section VI
-
-def fleiss(table):
-    n = len(table[0])
-    cats = sorted({v for row in table for v in row})
-    N = len(table)
-    pj = {c: sum(row.count(c) for row in table) / (N * n) for c in cats}
-    pbar = sum((sum(row.count(c) ** 2 for c in cats) - n) / (n * (n - 1)) for row in table) / N
-    pe = sum(v * v for v in pj.values())
-    return (pbar - pe) / (1 - pe)
-
-
-def validation_section():
-    header("Section VI - human validation (four annotators, A1-A4)")
-    with open(ANN / "answer_key.csv", encoding="utf-8") as f:
-        key = {r["item_id"]: r for r in csv.DictReader(f)}
-    ann = {}
-    for a in ("A1", "A2", "A3", "A4"):
-        with open(ANN / f"annotations_{a}.csv", encoding="utf-8") as f:
-            ann[a] = {r["item_id"]: (r.get("your_answer") or "").strip().strip('"').lower()
-                      for r in csv.DictReader(f)}
-    ids = lambda p: sorted(i for i in key if i.startswith(p))
-    kappa = lambda items: fleiss([[ann[a][i] for a in ann] for i in items])
-
-    for task, prefix in (("text-only traps (Task B)", "B"), ("traps with the spatial line (Task A)", "A")):
-        items = ids(prefix)
-        dec = [(i, ann[a][i]) for a in ann for i in items if ann[a][i] in ("assistant", "other person")]
-        right = sum(v == key[i]["truth"].lower() for i, v in dec)
-        p = binomtest(right, len(dec), 0.5).pvalue
-        print(f"{task:<40} n={len(items)}  accuracy {right}/{len(dec)} = {pct(right, len(dec)):.1f}%"
-              f"  vs 50%: p={p:.1e} ({thr(p)})  Fleiss kappa={kappa(items):.3f}")
-
-    for task, prefix, field in (("authored contrasts (Task D)", "D", "intended"),
-                                ("extractor (Task E)", "E", "machine_said")):
-        items = ids(prefix)
-        agree = sum(ann[a][i] == (key[i][field] or "").lower() for a in ann for i in items)
-        total = len(items) * len(ann)
-        print(f"{task:<40} n={len(items)}  agreement with key {agree}/{total} = {pct(agree, total):.1f}%"
-              f"  Fleiss kappa={kappa(items):.3f}")
-
-    items = ids("C")
-    code = {"wrong person": 0, "not from list": 1, "uses list": 2}
-    groups, xs, ys = defaultdict(list), [], []
-    for i in items:
-        label, votes = Counter(ann[a][i] for a in ann).most_common(1)[0]
-        if votes >= 3 and key[i]["llm_judge_score"]:
-            score = float(key[i]["llm_judge_score"])
-            groups[label].append(score)
-            xs.append(code[label])
-            ys.append(score)
-    h = kruskal(*groups.values())
-    s = spearmanr(xs, ys)
-    print(f"{'profile use vs judge quality (Task C)':<40} n={len(items)}  Fleiss kappa={kappa(items):.3f}")
-    print(f"{'':<40} {len(xs)} items with a 3-of-4 majority: Kruskal-Wallis H={h.statistic:.2f},"
-          f" p={h.pvalue:.4f} ({thr(h.pvalue)}); Spearman rho={s.statistic:.3f}, p={s.pvalue:.4f}")
-
-
 def have(*names):
     return all((OUT / n).exists() for n in names)
 
@@ -370,7 +311,6 @@ def main():
     else:
         header("Privacy instruction - waiting for output/ablation_privacy_*.csv "
                "(released upon acceptance)")
-    validation_section()
 
 
 if __name__ == "__main__":
